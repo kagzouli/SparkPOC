@@ -15,7 +15,7 @@ import static org.apache.spark.sql.types.DataTypes.DateType;
 import static org.apache.spark.sql.types.DataTypes.IntegerType;
 import static org.apache.spark.sql.types.DataTypes.StringType;
 
-public class SparkPocMain {
+public class SparkPocNbValidationsReseauMain {
 
 	public static void main(String[] args) {
 		
