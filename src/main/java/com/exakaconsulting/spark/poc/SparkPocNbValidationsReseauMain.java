@@ -45,9 +45,8 @@ public class SparkPocNbValidationsReseauMain {
 		
 		csvDataFrame = csvDataFrame.groupBy("LIBELLE_ARRET").sum("NB_VALD").orderBy("LIBELLE_ARRET");
 		
-		csvDataFrame.registerTempTable("tempTable");
-		csvDataFrame.sqlContext().sql("select * from tempTable").show();
 				
+		csvDataFrame.show();
 				
 		System.out.println("Spark context : "+ csvDataFrame );
 
