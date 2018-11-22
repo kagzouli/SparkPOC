@@ -6,14 +6,14 @@ import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.IntegerType;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-import static org.apache.spark.sql.types.DataTypes.DateType;
 import static org.apache.spark.sql.types.DataTypes.IntegerType;
 import static org.apache.spark.sql.types.DataTypes.StringType;
+import static org.apache.spark.sql.types.DataTypes.LongType;
+
 
 public class SparkPocNbValidationsReseauMain {
 
@@ -42,7 +42,7 @@ public class SparkPocNbValidationsReseauMain {
 		// dataFrameReader.format("csv").load("D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources\\signalisation-tricolore.csv");
 
 
-		csvDetailStation.show();
+		csvDetailStation.show(20);
 
 		System.out.println("Spark context : " + csvDetailStation);
 
@@ -75,7 +75,7 @@ public class SparkPocNbValidationsReseauMain {
 				new StructField[] { new StructField("Rang", IntegerType, false, Metadata.empty()),
 						new StructField("Reseau", StringType, false, Metadata.empty()),
 						new StructField("Station", StringType, false, Metadata.empty()),
-						new StructField("Trafic", IntegerType, false, Metadata.empty()),
+						new StructField("Trafic", LongType, false, Metadata.empty()),
 						new StructField("Correspondance1", StringType, false, Metadata.empty()),
 						new StructField("Correspondance2", StringType, false, Metadata.empty()),
 						new StructField("Correspondance3", StringType, false, Metadata.empty()),
