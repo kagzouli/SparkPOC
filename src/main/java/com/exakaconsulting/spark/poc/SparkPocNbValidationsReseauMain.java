@@ -10,12 +10,27 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
+import scala.collection.JavaConversions;
+
 import static org.apache.spark.sql.types.DataTypes.IntegerType;
 import static org.apache.spark.sql.types.DataTypes.StringType;
+
+import java.util.Arrays;
+import java.util.List;
+
 import static org.apache.spark.sql.types.DataTypes.LongType;
 
 
 public class SparkPocNbValidationsReseauMain {
+	
+	/** Left outer **/
+	private static final String LEFT_OUTER = "leftouter";
+	
+	/** columns **/
+	private static final String STATION_COLUMN    = "STATION";
+	private static final String RESEAU_COLUMN     = "RESEAU";
+	private static final String VILLE_COLUMN      = "VILLE";
+	private static final String ARRONDIS_COLUMN   = "ARRONDISSEMENT";
 
 	public static void main(String[] args) {
 
@@ -29,7 +44,7 @@ public class SparkPocNbValidationsReseauMain {
 		final DataFrameReader schemaValidationBilStation = constructDataFrameValidationBilStation(sparkSession);
 		Dataset<Row> csvValidationBilStation = schemaValidationBilStation.format("csv").load(
 				"D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources\\validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv");
-		csvValidationBilStation = csvValidationBilStation.groupBy("LIBELLE_ARRET").sum("NB_VALD").orderBy("LIBELLE_ARRET");
+		csvValidationBilStation = csvValidationBilStation.groupBy(STATION_COLUMN).sum("NB_VALD").orderBy(STATION_COLUMN);
 
 		
 		final DataFrameReader schemaDetailStation = constructDataFrameDetailStation(sparkSession);
@@ -37,9 +52,10 @@ public class SparkPocNbValidationsReseauMain {
 				"D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources\\trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv");
 		
 
+		// Jointure avec les 2 datasets
+		List<String> listColumns = Arrays.asList(STATION_COLUMN);
+		Dataset<Row> csvJointure  = csvValidationBilStation.join(csvDetailStation, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER);
 		
-		// final Dataset<Row> csvDataFrame =
-		// dataFrameReader.format("csv").load("D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources\\signalisation-tricolore.csv");
 
 
 		csvDetailStation.show(20);
@@ -55,7 +71,7 @@ public class SparkPocNbValidationsReseauMain {
 						new StructField("CODE_STIF_TRNS", IntegerType, false, Metadata.empty()),
 						new StructField("CODE_STIF_RES", IntegerType, false, Metadata.empty()),
 						new StructField("CODE_STIF_ARRET", IntegerType, false, Metadata.empty()),
-						new StructField("LIBELLE_ARRET", StringType, false, Metadata.empty()),
+						new StructField(STATION_COLUMN, StringType, false, Metadata.empty()),
 						new StructField("ID_REFA_LDA", IntegerType, false, Metadata.empty()),
 						new StructField("CATEGORIE_TITRE", StringType, false, Metadata.empty()),
 						new StructField("NB_VALD", IntegerType, false, Metadata.empty()), });
@@ -72,17 +88,17 @@ public class SparkPocNbValidationsReseauMain {
 	private static DataFrameReader constructDataFrameDetailStation(final SparkSession sparkSession) {
 
 		final StructType schema = new StructType(
-				new StructField[] { new StructField("Rang", IntegerType, false, Metadata.empty()),
-						new StructField("Reseau", StringType, false, Metadata.empty()),
-						new StructField("Station", StringType, false, Metadata.empty()),
-						new StructField("Trafic", LongType, false, Metadata.empty()),
-						new StructField("Correspondance1", StringType, false, Metadata.empty()),
-						new StructField("Correspondance2", StringType, false, Metadata.empty()),
-						new StructField("Correspondance3", StringType, false, Metadata.empty()),
-						new StructField("Correspondance4", StringType, false, Metadata.empty()),
-						new StructField("Correspondance5", StringType, false, Metadata.empty()),
-						new StructField("Ville", StringType, false, Metadata.empty()),
-						new StructField("Arrondissement", IntegerType, false, Metadata.empty()),
+				new StructField[] { new StructField("RANG", IntegerType, false, Metadata.empty()),
+						new StructField(RESEAU_COLUMN, StringType, false, Metadata.empty()),
+						new StructField(STATION_COLUMN, StringType, false, Metadata.empty()),
+						new StructField("TRAFFIC", LongType, false, Metadata.empty()),
+						new StructField("CORRESPONDANCE1", StringType, false, Metadata.empty()),
+						new StructField("CORRESPONDANCE2", StringType, false, Metadata.empty()),
+						new StructField("CORRESPONDANCE3", StringType, false, Metadata.empty()),
+						new StructField("CORRESPONDANCE4", StringType, false, Metadata.empty()),
+						new StructField("CORRESPONDANCE5", StringType, false, Metadata.empty()),
+						new StructField(VILLE_COLUMN, StringType, false, Metadata.empty()),
+						new StructField(ARRONDIS_COLUMN, IntegerType, false, Metadata.empty()),
 				});
 
 		
