@@ -26,11 +26,14 @@ public class SparkPocNbValidationsReseauMain {
 	/** Left outer **/
 	private static final String LEFT_OUTER = "leftouter";
 	
+	private static final String DIRECTORY  = "D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources";
+	
 	/** columns **/
 	private static final String STATION_COLUMN    = "STATION";
 	private static final String RESEAU_COLUMN     = "RESEAU";
 	private static final String VILLE_COLUMN      = "VILLE";
 	private static final String ARRONDIS_COLUMN   = "ARRONDISSEMENT";
+	private static final String NBRE_VALIDATION   = "NBRE_VALIDATION";
 
 	public static void main(String[] args) {
 
@@ -43,13 +46,13 @@ public class SparkPocNbValidationsReseauMain {
 		// Groupage par nombre de validations 
 		final DataFrameReader schemaValidationBilStation = constructDataFrameValidationBilStation(sparkSession);
 		Dataset<Row> csvValidationBilStation = schemaValidationBilStation.format("csv").load(
-				"D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources\\validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv");
-		csvValidationBilStation = csvValidationBilStation.groupBy(STATION_COLUMN).sum("NB_VALD").orderBy(STATION_COLUMN);
+				DIRECTORY + "\\validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv");
+		csvValidationBilStation = csvValidationBilStation.groupBy(STATION_COLUMN).sum("NB_VALD").withColumnRenamed("sum(NB_VALD)", NBRE_VALIDATION).orderBy(STATION_COLUMN);
 
 		
 		final DataFrameReader schemaDetailStation = constructDataFrameDetailStation(sparkSession);
 		Dataset<Row> csvDetailStation = schemaDetailStation.format("csv").load(
-				"D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources\\trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv");
+				DIRECTORY + "\\trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv").select(RESEAU_COLUMN , STATION_COLUMN , VILLE_COLUMN , ARRONDIS_COLUMN);
 		
 
 		// Jointure avec les 2 datasets
@@ -59,6 +62,7 @@ public class SparkPocNbValidationsReseauMain {
 
 
 		csvDetailStation.show(20);
+		csvJointure.show(20);
 
 		System.out.println("Spark context : " + csvDetailStation);
 
