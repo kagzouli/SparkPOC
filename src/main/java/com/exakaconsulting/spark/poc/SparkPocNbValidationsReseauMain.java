@@ -41,12 +41,6 @@ public class SparkPocNbValidationsReseauMain {
 	private static final String ARRONDIS_COLUMN   = "ARRONDISSEMENT";
 	private static final String NBRE_VALIDATION   = "NBRE_VALIDATION";
 	
-	/** Config spark **/
-	private static final String  SPARK_EXECUTOR_MEMORY         = "2g";
-	private static final String  SPARK_DRIVER_MEMORY           = "2g";
-	private static final String  SPARK_EXECUTOR_CORES          = "1";
-	private static final String  SPARK_EXECUTOR_INSTANCES      = "4";
-	private static final String  SPARK_SQL_SHUFFLE_PARTITIONS  = "24";
 
 	public static void main(String[] args) {
 		
@@ -70,8 +64,10 @@ public class SparkPocNbValidationsReseauMain {
 		Dataset<Row> csvJointure  = csvValidationBilStation.join(csvDetailStation, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER);
 		
 		
-		csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "\\output.csv");
+		//csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "\\output.csv");
+		csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "\\output.csv");
 
+		
 		// csvValidationBilStation.show(20);
 		// csvDetailStation.show(20);
 		// csvJointure.show(20);
@@ -126,13 +122,17 @@ public class SparkPocNbValidationsReseauMain {
 	}
 	
 	private static SparkConf retrieveSparkConf() {
+		
+		ConfigurationParameters configParameters = ConfigurationParameters.getInstance();
+		
+		
 		SparkConf sparkConf = new SparkConf().setAppName("Test Karim")
 		 .setMaster("local[*]")
-        .set("spark.executor.memory", SPARK_EXECUTOR_MEMORY)
-        .set("spark.driver.memory", SPARK_DRIVER_MEMORY)
-        .set("spark.executor.cores", SPARK_EXECUTOR_CORES)
-        .set("spark.executor.instances", SPARK_EXECUTOR_INSTANCES)
-        .set("spark.sql.shuffle.partitions", SPARK_SQL_SHUFFLE_PARTITIONS)
+        .set("spark.executor.memory", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_MEMORY))
+        .set("spark.driver.memory", configParameters.getProperty(ConfigurationParameters.SPARK_DRIVER_MEMORY))
+        .set("spark.executor.cores", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_CORES))
+        .set("spark.executor.instances", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_INSTANCES))
+        .set("spark.sql.shuffle.partitions", configParameters.getProperty(ConfigurationParameters.SPARK_SQL_SHUFFLE_PARTITIONS))
         .set("spark.serializer", KryoSerializer.class.getName())
         .set("spark.kryo.registrator", BatchTestKarimRegistrator.class.getName())
         .set("spark.kryo.registrationRequired", "true")
