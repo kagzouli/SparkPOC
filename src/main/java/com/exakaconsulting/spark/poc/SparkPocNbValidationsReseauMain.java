@@ -31,9 +31,7 @@ public class SparkPocNbValidationsReseauMain {
 
 	/** Left outer **/
 	private static final String LEFT_OUTER = "leftouter";
-	
-	private static final String DIRECTORY  = "D:\\Karim\\dev\\workspace\\SparkPOC\\SparkPOC\\src\\main\\resources";
-	
+		
 	/** columns **/
 	private static final String STATION_COLUMN    = "STATION";
 	private static final String RESEAU_COLUMN     = "RESEAU";
@@ -44,19 +42,25 @@ public class SparkPocNbValidationsReseauMain {
 
 	public static void main(String[] args) {
 		
+		if (args == null || args.length != 1){
+			throw new IllegalArgumentException("The programe must have one parameter, the directory");
+		}
+		
+		final String directory = args[0];
+		
 		SparkConf sparkConf = retrieveSparkConf();
 		SparkSession sparkSession = SparkSession.builder().config(sparkConf).getOrCreate();
 
 		// Groupage par nombre de validations 
 		final DataFrameReader schemaValidationBilStation = constructDataFrameValidationBilStation(sparkSession);
 		Dataset<Row> csvValidationBilStation = schemaValidationBilStation.format("csv").load(
-				DIRECTORY + "\\validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv");
+				directory + "\\validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv");
 		csvValidationBilStation = csvValidationBilStation.groupBy(STATION_COLUMN).sum("NB_VALD").withColumnRenamed("sum(NB_VALD)", NBRE_VALIDATION).orderBy(STATION_COLUMN);
 
 		
 		final DataFrameReader schemaDetailStation = constructDataFrameDetailStation(sparkSession);
 		Dataset<Row> csvDetailStation = schemaDetailStation.format("csv").load(
-				DIRECTORY + "\\trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv").select(RESEAU_COLUMN , STATION_COLUMN , VILLE_COLUMN , ARRONDIS_COLUMN);
+				directory + "\\trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv").select(RESEAU_COLUMN , STATION_COLUMN , VILLE_COLUMN , ARRONDIS_COLUMN);
 		
 
 		// Jointure avec les 2 datasets
@@ -65,7 +69,7 @@ public class SparkPocNbValidationsReseauMain {
 		
 		
 		//csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "\\output.csv");
-		csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "\\output.csv");
+		csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "\\output.csv");
 
 		
 		// csvValidationBilStation.show(20);
