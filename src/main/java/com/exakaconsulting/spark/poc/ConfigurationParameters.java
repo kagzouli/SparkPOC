@@ -19,6 +19,7 @@ public class ConfigurationParameters {
 	private Properties properties    = new Properties();
 	
 	/** Config spark **/
+	public static final String  SPARK_MASTER_VALUE             = "spark.master.value";
 	public static final String  SPARK_EXECUTOR_MEMORY          = "spark.executor.memory";
 	public static final String  SPARK_DRIVER_MEMORY            = "spark.driver.memory";
 	public static final String  SPARK_EXECUTOR_CORES           = "spark.executor.cores";

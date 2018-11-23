@@ -127,7 +127,7 @@ public class SparkPocNbValidationsReseauMain {
 		
 		
 		SparkConf sparkConf = new SparkConf().setAppName("Test Karim")
-		 .setMaster("local[*]")
+		.setMaster(configParameters.getProperty(ConfigurationParameters.SPARK_MASTER_VALUE))
         .set("spark.executor.memory", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_MEMORY))
         .set("spark.driver.memory", configParameters.getProperty(ConfigurationParameters.SPARK_DRIVER_MEMORY))
         .set("spark.executor.cores", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_CORES))
