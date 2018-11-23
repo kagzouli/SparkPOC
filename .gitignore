@@ -30,6 +30,7 @@ target/
 bin/
 Servers/
 node_modules/
+src/main/resources/output.csv/
 
 # Logs and databases #
 
