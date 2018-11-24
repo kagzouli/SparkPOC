@@ -1,0 +1,18 @@
+he launch scripts located at %SPARK_HOME%\sbin do not support Windows. You need to manually run the master and worker as outlined below.
+Go to %SPARK_HOME%\bin folder in a command prompt
+Master
+------
+Run spark-class org.apache.spark.deploy.master.Master to run the master. This will give you a URL of the form spark://ip:port
+
+
+Worker
+Run spark-class org.apache.spark.deploy.worker.Worker spark://192.168.139.1:7077  to run the worker. Make sure you use the URL you obtained in step 2.
+Run spark-shell --master spark://192.168.139.1:7077 to connect an application to the newly created cluster.
+
+
+
+spark-submit --class com.exakaconsulting.spark.poc.SparkPocNbValidationsReseauMain --master spark://192.168.139.1:7077 --deploy-mode client spark-submit --class com.exakaconsulting.spark.poc.SparkPocNbValidationsReseauMain --master spark://192.168.139.1:7077 --deploy-mode client --conf 'spark.executor.extraJavaOptions=-DCONFIG_FILE=D:\Karim\dev\workspace\SparkPOC\SparkPOC\src\main\resources\config.properties' D:\tmp\SparkPOC-0.0.1-SNAPSHOT.jar D:\Karim\dev\workspace\SparkPOC\SparkPOC\src\main\resources 'spark.executor.extraJavaOptions=-DCONFIG_FILE=D:\Karim\dev\workspace\SparkPOC\SparkPOC\src\main\resources\config.properties' D:\tmp\SparkPOC-0.0.1-SNAPSHOT.jar D:\Karim\dev\workspace\SparkPOC\SparkPOC\src\main\resources
+
+
+
+spark-submit --class com.exakaconsulting.spark.poc.SparkPocNbValidationsReseauMain --master spark://192.168.139.1:7077 --deploy-mode client --driver-java-options  "-DCONFIG_FILE=D:\Karim\dev\workspace\SparkPOC\SparkPOC\src\main\resources\config.properties" D:\tmp\SparkPOC-0.0.1-SNAPSHOT.jar D:\Karim\dev\workspace\SparkPOC\SparkPOC\src\main\resources
