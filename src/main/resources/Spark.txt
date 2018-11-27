@@ -2,12 +2,12 @@ he launch scripts located at %SPARK_HOME%\sbin do not support Windows. You need 
 Go to %SPARK_HOME%\bin folder in a command prompt
 Master
 ------
-Run spark-class org.apache.spark.deploy.master.Master to run the master. This will give you a URL of the form spark://ip:port
+Run %SPARK_HOME%\bin\spark-class org.apache.spark.deploy.master.Master to run the master. This will give you a URL of the form spark://ip:port
 
 
 Worker
-Run spark-class org.apache.spark.deploy.worker.Worker spark://192.168.139.1:7077  to run the worker. Make sure you use the URL you obtained in step 2.
-Run spark-shell --master spark://192.168.139.1:7077 to connect an application to the newly created cluster.
+Run %SPARK_HOME%\bin\spark-class org.apache.spark.deploy.worker.Worker spark://192.168.139.1:7077  to run the worker. Make sure you use the URL you obtained in step 2.
+Run %SPARK_HOME%\bin\spark-shell --master spark://192.168.139.1:7077 to connect an application to the newly created cluster.
 
 
 
