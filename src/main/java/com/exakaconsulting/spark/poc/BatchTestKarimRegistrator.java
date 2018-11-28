@@ -32,9 +32,9 @@ public class BatchTestKarimRegistrator implements KryoRegistrator {
 			kryo.register(Class.forName("scala.reflect.ClassTag$$anon$1"));
 			kryo.register(Class.forName("org.apache.spark.internal.io.FileCommitProtocol$TaskCommitMessage"));
 			
-			/*kryo.register(java.lang.Class.class);
-			kryo.register(Class.forName("org.apache.spark.sql.execution.datasources.FileFormatWriter$WriteTaskResult"));
-			kryo.register(Class.forName("scala.collection.immutable.Set$EmptySet$"));*/
+			kryo.register(java.lang.Class.class);
+		//	kryo.register(Class.forName("org.apache.spark.sql.execution.datasources.FileFormatWriter$WriteTaskResult"));
+			kryo.register(Class.forName("scala.collection.immutable.Set$EmptySet$"));
 		} catch (ClassNotFoundException e) {
 			LOGGER.error("Error during kryo registration!", e);
 		}

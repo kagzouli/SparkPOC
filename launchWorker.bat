@@ -1,0 +1,1 @@
+%SPARK2_4_HOME%\bin\spark-class org.apache.spark.deploy.worker.Worker spark://192.168.139.1:7077 

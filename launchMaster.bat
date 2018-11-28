@@ -1,0 +1,1 @@
+%SPARK2_4_HOME%\bin\spark-class org.apache.spark.deploy.master.Master
