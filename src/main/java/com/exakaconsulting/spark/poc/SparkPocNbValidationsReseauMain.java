@@ -1,6 +1,5 @@
 package com.exakaconsulting.spark.poc;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -54,14 +53,14 @@ public class SparkPocNbValidationsReseauMain {
 
 		// Groupage par nombre de validations 
 		final DataFrameReader schemaValidationBilStation = constructDataFrameValidationBilStation(sparkSession);
-		Dataset<Row> csvValidationBilStation = schemaValidationBilStation.format("csv").load(new File(
-				directory + "/validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv").getAbsolutePath());
+		Dataset<Row> csvValidationBilStation = schemaValidationBilStation.format("csv").load(
+				directory + "/validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv");
 		csvValidationBilStation = csvValidationBilStation.groupBy(STATION_COLUMN).sum("NB_VALD").withColumnRenamed("sum(NB_VALD)", NBRE_VALIDATION).orderBy(STATION_COLUMN);
 
 		
 		final DataFrameReader schemaDetailStation = constructDataFrameDetailStation(sparkSession);
-		Dataset<Row> csvDetailStation = schemaDetailStation.format("csv").load(new File(
-				directory + "/trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv").getAbsolutePath()).select(RESEAU_COLUMN , STATION_COLUMN , VILLE_COLUMN , ARRONDIS_COLUMN);
+		Dataset<Row> csvDetailStation = schemaDetailStation.format("csv").load(
+				directory + "/trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv").select(RESEAU_COLUMN , STATION_COLUMN , VILLE_COLUMN , ARRONDIS_COLUMN);
 		
 
 		// Jointure avec les 2 datasets
@@ -70,15 +69,21 @@ public class SparkPocNbValidationsReseauMain {
 		
 		
 		//csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "/output.csv");
-		csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(new File(directory + "/output.csv").getAbsolutePath());
-
-		csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(new File(directory + "/outputfinal.csv").getAbsolutePath());
-
 		
-		// csvValidationBilStation.show(20);
-		// csvDetailStation.show(20);
-		// csvJointure.show(20);
+		if (directory.contains("hdfs://")){
+			csvJointure.rdd().saveAsTextFile(directory + "/outputfile.csv");
+			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
 
+		}else{
+			csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
+			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/outputfinal.csv");
+
+		}
+		
+		
+		
+		
+		
 		LOGGER.info("Spark context : " + csvDetailStation);
 
 	}
