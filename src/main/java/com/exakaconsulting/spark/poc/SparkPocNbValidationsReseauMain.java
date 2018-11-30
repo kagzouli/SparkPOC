@@ -66,11 +66,13 @@ public class SparkPocNbValidationsReseauMain {
 
 		// Jointure avec les 2 datasets
 		List<String> listColumns = Arrays.asList(STATION_COLUMN);
-		Dataset<Row> csvJointure  = csvValidationBilStation.join(csvDetailStation, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER);
+		Dataset<Row> csvJointure  = csvValidationBilStation.join(csvDetailStation, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN);
 		
 		
 		//csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "/output.csv");
 		csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(new File(directory + "/output.csv").getAbsolutePath());
+
+		csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(new File(directory + "/outputfinal.csv").getAbsolutePath());
 
 		
 		// csvValidationBilStation.show(20);
