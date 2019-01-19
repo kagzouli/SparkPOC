@@ -63,6 +63,10 @@ public class SparkPocNbValidationsReseauMain {
 				directory + "/trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv").select(RESEAU_COLUMN , STATION_COLUMN , VILLE_COLUMN , ARRONDIS_COLUMN);
 		
 
+		LOGGER.info(String.format("The number of data is %s", csvDetailStation.count()));
+		
+		csvDetailStation.show(400);
+		
 		// Jointure avec les 2 datasets
 		List<String> listColumns = Arrays.asList(STATION_COLUMN);
 		Dataset<Row> csvJointure  = csvValidationBilStation.join(csvDetailStation, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN);

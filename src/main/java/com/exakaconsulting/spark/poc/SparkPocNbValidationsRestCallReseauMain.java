@@ -28,6 +28,8 @@ import static org.apache.spark.sql.types.DataTypes.IntegerType;
 import static org.apache.spark.sql.types.DataTypes.StringType;
 import static org.apache.spark.sql.types.DataTypes.LongType;
 
+import org.apache.spark.sql.functions;
+
 public class SparkPocNbValidationsRestCallReseauMain {
 	
 	/** Logger **/
@@ -81,6 +83,7 @@ public class SparkPocNbValidationsRestCallReseauMain {
 			
 			final String criteriaRequestRest = objectMapper.writeValueAsString(criteriaListNames);
 			listRequestTableViewTemp.add(criteriaRequestRest);
+			
 		}
 		
 		Dataset<String> datasetCritReq = sparkSession.createDataset(listRequestTableViewTemp, Encoders.STRING());
@@ -96,16 +99,17 @@ public class SparkPocNbValidationsRestCallReseauMain {
 		datasetResultCallRest.printSchema();
 		
 		datasetResultCallRest.show(2000);
-		// 
 		
 		
-		
+		LOGGER.info(String.format("The number of data is %s", datasetResultCallRest.count()));
+
 		
 		
 
 		// Jointure avec les 2 datasets
 		List<String> listColumns = Arrays.asList(STATION_COLUMN);
-		Dataset<Row> csvJointure  = csvValidationBilStation.join(datasetResultCallRest, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN);
+		Dataset<Row> csvJointure  = csvValidationBilStation.join(datasetResultCallRest, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN)
+				.withColumn("listCorrespondance", functions.to_json(functions.struct(functions.col("listCorrespondance"))));
 		
 		
 		// csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "/output.csv");
@@ -115,13 +119,13 @@ public class SparkPocNbValidationsRestCallReseauMain {
 			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
 
 		}else{
-			//csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
-			//csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/outputfinal.csv");
+			csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
+			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/outputfinal.csv");
 
 		}
 		
 		
-		csvJointure.show(4000);
+		// csvJointure.show(4000);
 		
 		
 		// LOGGER.info("Spark context : " + csvDetailStation);
