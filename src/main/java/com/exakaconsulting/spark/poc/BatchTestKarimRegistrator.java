@@ -39,6 +39,7 @@ public class BatchTestKarimRegistrator implements KryoRegistrator {
 		kryo.register(org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema.class);
 		kryo.register(org.apache.spark.sql.types.LongType$.class);
 		kryo.register(org.apache.spark.sql.types.ArrayType.class);
+		kryo.register(org.apache.spark.sql.types.NullType$.class);
 		
 		
 		try {

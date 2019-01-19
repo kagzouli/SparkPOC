@@ -14,11 +14,21 @@
 		</layout>
 	</appender>
 
+    <appender name="FILEGLOBAL" class="org.apache.log4j.RollingFileAppender">
+		<param name="file" value="D:/logs/SparkPOC-info.log" />
+		<param name="MaxFileSize" value="10240KB" />
+		<!-- Keep one backup file -->
+		<param name="MaxBackupIndex" value="10" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d [%t] %5p %c{1}:{%F:%L} - %m%n" />
+		</layout>
+	</appender>
+
 
 	<root>
-		<!--appender-ref ref="CONSOLE"/-->
 		<priority value="INFO" />
 		<appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILEGLOBAL" />
 	</root>
 
 </log4j:configuration>
