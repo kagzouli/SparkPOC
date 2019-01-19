@@ -26,7 +26,6 @@ import scala.collection.JavaConversions;
 
 import static org.apache.spark.sql.types.DataTypes.IntegerType;
 import static org.apache.spark.sql.types.DataTypes.StringType;
-import static org.apache.spark.sql.types.DataTypes.LongType;
 
 import org.apache.spark.sql.functions;
 
@@ -41,14 +40,8 @@ public class SparkPocNbValidationsRestCallReseauMain {
 		
 	/** columns **/
 	private static final String STATION_COLUMN    = "station";
-	private static final String RESEAU_COLUMN     = "reseau";
-	private static final String VILLE_COLUMN      = "ville";
-	private static final String ARRONDIS_COLUMN   = "arrondissement";
 	private static final String NBRE_VALIDATION   = "nbreValidation";
-	
-	
-	private static final String REST_CALL   = "http://54.38.186.137:9080/StationDemoWeb/station/findStationsByCrit?page=1&station=PASSY";
-	
+		
 
 	public static void main(String[] args) throws Exception{
 		
@@ -91,7 +84,8 @@ public class SparkPocNbValidationsRestCallReseauMain {
 		
 		
 		Map<String, String> options = new HashMap<>();
-		options.put("url", "http://desktop-m49av3o:8080/StationDemoWeb/statioNamesn/findStationsByNames");
+		options.put("url", "http://DESKTOP-M49AV3O:8080/StationDemoWebSparkRest/statioNamesn/findStationsByNames");
+		options.put("securityToken", "TOKEN");
 		options.put("input", "parametersinputpbl");
 		options.put("method", "POST");
 		
@@ -111,6 +105,8 @@ public class SparkPocNbValidationsRestCallReseauMain {
 		Dataset<Row> csvJointure  = csvValidationBilStation.join(datasetResultCallRest, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN)
 				.withColumn("listCorrespondance", functions.to_json(functions.struct(functions.col("listCorrespondance"))));
 		
+		
+		csvJointure.show(20000);
 		
 		// csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "/output.csv");
 		
@@ -153,29 +149,6 @@ public class SparkPocNbValidationsRestCallReseauMain {
 	}
 	
 
-	private static DataFrameReader constructDataFrameDetailStation(final SparkSession sparkSession) {
-
-		final StructType schema = new StructType(
-				new StructField[] { new StructField("RANG", IntegerType, false, Metadata.empty()),
-						new StructField(RESEAU_COLUMN, StringType, false, Metadata.empty()),
-						new StructField(STATION_COLUMN, StringType, false, Metadata.empty()),
-						new StructField("TRAFFIC", LongType, false, Metadata.empty()),
-						new StructField("CORRESPONDANCE1", StringType, false, Metadata.empty()),
-						new StructField("CORRESPONDANCE2", StringType, false, Metadata.empty()),
-						new StructField("CORRESPONDANCE3", StringType, false, Metadata.empty()),
-						new StructField("CORRESPONDANCE4", StringType, false, Metadata.empty()),
-						new StructField("CORRESPONDANCE5", StringType, false, Metadata.empty()),
-						new StructField(VILLE_COLUMN, StringType, false, Metadata.empty()),
-						new StructField(ARRONDIS_COLUMN, IntegerType, false, Metadata.empty()),
-				});
-
-		
-		final DataFrameReader dataFrameDetailStation = sparkSession.read();
-		dataFrameDetailStation.option("header", "true").schema(schema).option("mode", "DROPMALFORMED")
-				.option("delimiter", ";");
-
-		return dataFrameDetailStation;
-	}
 	
 	private static SparkConf retrieveSparkConf() {
 		
