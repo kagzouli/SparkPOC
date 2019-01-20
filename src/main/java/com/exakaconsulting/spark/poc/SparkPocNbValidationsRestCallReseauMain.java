@@ -82,9 +82,10 @@ public class SparkPocNbValidationsRestCallReseauMain {
 		Dataset<String> datasetCritReq = sparkSession.createDataset(listRequestTableViewTemp, Encoders.STRING());
 		datasetCritReq.createOrReplaceTempView("parametersinputpbl");
 		
+		final ConfigurationParameters configParameters = ConfigurationParameters.getInstance();
 		
 		Map<String, String> options = new HashMap<>();
-		options.put("url", "http://DESKTOP-M49AV3O:8080/StationDemoWebSparkRest/statioNamesn/findStationsByNames");
+		options.put("url", configParameters.getProperty(ConfigurationParameters.SPARK_URL_REST_CALL));
 		options.put("securityToken", "TOKEN");
 		options.put("input", "parametersinputpbl");
 		options.put("method", "POST");
