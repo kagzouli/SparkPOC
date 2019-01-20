@@ -62,6 +62,7 @@ public class SparkPocNbValidationsRestCallReseauMain {
 
 		
 		List<String> listStation = new ArrayList<>();
+		// collectAsList has to be avoided because it retrieves all the data to the driver.
 		csvValidationBilStation.collectAsList().forEach(row -> listStation.add(row.getAs(STATION_COLUMN)));
 		
 		
