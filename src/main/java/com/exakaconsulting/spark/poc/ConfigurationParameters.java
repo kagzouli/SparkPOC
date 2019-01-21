@@ -26,7 +26,8 @@ public class ConfigurationParameters {
 	public static final String  SPARK_EXECUTOR_INSTANCES       = "spark.executor.instances";
 	public static final String  SPARK_SQL_SHUFFLE_PARTITIONS   = "spark.sql.shuffle.partitions";
 	
-	public static final String  SPARK_URL_REST_CALL             = "spark.url.rest.call";
+	public static final String  SPARK_URL_REST_CALL            = "spark.url.rest.call";
+	public static final String  SPARK_URL_REST_COMPLEXE_CALL   = "spark.url.restcomplexe.call";
 	
 	private static final String CONFIG_FILE         = "CONFIG_FILE";
 
