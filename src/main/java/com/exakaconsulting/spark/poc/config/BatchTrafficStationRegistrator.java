@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.Kryo;
 
-public class BatchTestKarimRegistrator implements KryoRegistrator {
+public class BatchTrafficStationRegistrator implements KryoRegistrator {
 	
 	/** Logger **/
-	private static final Logger LOGGER = LoggerFactory.getLogger(BatchTestKarimRegistrator.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(BatchTrafficStationRegistrator.class);
 
 
 	@Override
@@ -48,7 +48,6 @@ public class BatchTestKarimRegistrator implements KryoRegistrator {
 			kryo.register(Class.forName("org.apache.spark.internal.io.FileCommitProtocol$TaskCommitMessage"));
 			
 			kryo.register(java.lang.Class.class);
-		//	kryo.register(Class.forName("org.apache.spark.sql.execution.datasources.FileFormatWriter$WriteTaskResult"));
 			kryo.register(Class.forName("scala.collection.immutable.Set$EmptySet$"));
 			kryo.register(Class.forName("scala.math.Ordering$$anon$4"));
 			kryo.register(Class.forName("org.apache.spark.sql.catalyst.InternalRow$$anonfun$getAccessor$8"));

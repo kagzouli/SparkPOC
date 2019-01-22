@@ -1,12 +1,14 @@
 package com.exakaconsulting.spark.poc;
 
+import static org.apache.spark.sql.types.DataTypes.IntegerType;
+import static org.apache.spark.sql.types.DataTypes.LongType;
+import static org.apache.spark.sql.types.DataTypes.StringType;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.serializer.KryoSerializer;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -17,14 +19,9 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exakaconsulting.spark.poc.config.BatchTestKarimRegistrator;
-import com.exakaconsulting.spark.poc.config.ConfigurationParameters;
+import com.exakaconsulting.spark.poc.config.SparkSessionManager;
 
 import scala.collection.JavaConversions;
-
-import static org.apache.spark.sql.types.DataTypes.IntegerType;
-import static org.apache.spark.sql.types.DataTypes.StringType;
-import static org.apache.spark.sql.types.DataTypes.LongType;
 
 public class SparkPocNbValidationsReseauMain {
 	
@@ -42,6 +39,10 @@ public class SparkPocNbValidationsReseauMain {
 	private static final String ARRONDIS_COLUMN   = "ARRONDISSEMENT";
 	private static final String NBRE_VALIDATION   = "NBRE_VALIDATION";
 	
+	private static final String HEADER_CSTE       = "header";
+	private static final String DELIMITER_CSTE    = "delimiter";
+	private static final String OVERRIDE_CSTE     = "overwrite";
+	
 
 	public static void main(String[] args) {
 		
@@ -51,8 +52,8 @@ public class SparkPocNbValidationsReseauMain {
 		
 		final String directory = args[0];
 		
-		SparkConf sparkConf = retrieveSparkConf();
-		SparkSession sparkSession = SparkSession.builder().config(sparkConf).getOrCreate();
+		// Retrieve the SparkSession from the manager
+		final SparkSession sparkSession = SparkSessionManager.getInstance().getSparkSession();
 
 		// Groupage par nombre de validations 
 		final DataFrameReader schemaValidationBilStation = constructDataFrameValidationBilStation(sparkSession);
@@ -66,7 +67,9 @@ public class SparkPocNbValidationsReseauMain {
 				directory + "/trafic-annuel-entrant-par-station-du-reseau-ferre-2017.csv").select(RESEAU_COLUMN , STATION_COLUMN , VILLE_COLUMN , ARRONDIS_COLUMN);
 		
 
-		LOGGER.info(String.format("The number of data is %s", csvDetailStation.count()));
+		if (LOGGER.isInfoEnabled()){
+			LOGGER.info(String.format("The number of data is %s", csvDetailStation.count()));			
+		}
 		
 		csvDetailStation.show(400);
 		
@@ -74,25 +77,16 @@ public class SparkPocNbValidationsReseauMain {
 		List<String> listColumns = Arrays.asList(STATION_COLUMN);
 		Dataset<Row> csvJointure  = csvValidationBilStation.join(csvDetailStation, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN);
 		
-		
-		//csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "/output.csv");
-		
+				
 		if (directory.contains("hdfs://")){
 			csvJointure.rdd().saveAsTextFile(directory + "/outputfile.csv");
-			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
+			csvJointure.coalesce(1).write().mode(OVERRIDE_CSTE).options(getDataOutputParamCsv()).csv(directory + "/output.csv");
 
 		}else{
-			csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
-			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/outputfinal.csv");
+			csvJointure.write().mode(OVERRIDE_CSTE).options(getDataOutputParamCsv()).csv(directory + "/output.csv");
+			csvJointure.coalesce(1).write().mode(OVERRIDE_CSTE).options(getDataOutputParamCsv()).csv(directory + "/outputfinal.csv");
 
 		}
-		
-		
-		
-		
-		
-		LOGGER.info("Spark context : " + csvDetailStation);
-
 	}
 
 	private static DataFrameReader constructDataFrameValidationBilStation(final SparkSession sparkSession) {
@@ -108,8 +102,8 @@ public class SparkPocNbValidationsReseauMain {
 						new StructField("NB_VALD", IntegerType, false, Metadata.empty()), });
 
 		final DataFrameReader schemaValidationBilStation = sparkSession.read();
-		schemaValidationBilStation.option("header", "true").schema(schema).option("mode", "DROPMALFORMED")
-				.option("delimiter", ";");
+		schemaValidationBilStation.option(HEADER_CSTE, "true").schema(schema).option("mode", "DROPMALFORMED")
+				.option(DELIMITER_CSTE, ";");
 
 		return schemaValidationBilStation;
 
@@ -134,37 +128,16 @@ public class SparkPocNbValidationsReseauMain {
 
 		
 		final DataFrameReader dataFrameDetailStation = sparkSession.read();
-		dataFrameDetailStation.option("header", "true").schema(schema).option("mode", "DROPMALFORMED")
-				.option("delimiter", ";");
+		dataFrameDetailStation.option(HEADER_CSTE, "true").schema(schema).option("mode", "DROPMALFORMED")
+				.option(DELIMITER_CSTE, ";");
 
 		return dataFrameDetailStation;
 	}
-	
-	private static SparkConf retrieveSparkConf() {
 		
-		ConfigurationParameters configParameters = ConfigurationParameters.getInstance();
-		
-		
-		SparkConf sparkConf = new SparkConf().setAppName("Test Karim")
-		.setMaster(configParameters.getProperty(ConfigurationParameters.SPARK_MASTER_VALUE))
-        .set("spark.executor.memory", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_MEMORY))
-        .set("spark.driver.memory", configParameters.getProperty(ConfigurationParameters.SPARK_DRIVER_MEMORY))
-        .set("spark.executor.cores", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_CORES))
-        .set("spark.executor.instances", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_INSTANCES))
-        .set("spark.sql.shuffle.partitions", configParameters.getProperty(ConfigurationParameters.SPARK_SQL_SHUFFLE_PARTITIONS))
-        .set("spark.serializer", KryoSerializer.class.getName())
-        .set("spark.kryo.registrator", BatchTestKarimRegistrator.class.getName())
-        .set("spark.kryo.registrationRequired", "true")
-        .set("spark.network.timeout", "10000001")
-        .set("spark.executor.heartbeatInterval", "10000000")
-        .set("spark.sql.autoBroadcastJoinThreshold", "52428800");
-		return sparkConf;
-	}
-	
 	 public static Map<String, String> getDataOutputParamCsv() {
 	        Map<String, String> options = new HashMap<>();
-	        options.put("header", "true");
-	        options.put("delimiter", ";");
+	        options.put(HEADER_CSTE, "true");
+	        options.put(DELIMITER_CSTE, ";");
 	        options.put("comment", "#");
 	        return options;
 	    }

@@ -10,9 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.ListUtils;
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.serializer.KryoSerializer;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -25,8 +23,8 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exakaconsulting.spark.poc.config.BatchTestKarimRegistrator;
 import com.exakaconsulting.spark.poc.config.ConfigurationParameters;
+import com.exakaconsulting.spark.poc.config.SparkSessionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import scala.collection.JavaConversions;
@@ -43,6 +41,8 @@ public class SparkPocNbValidationsRestCallReseauComplexeMain {
 	/** columns **/
 	private static final String STATION_COLUMN    = "station";
 	private static final String NBRE_VALIDATION   = "nbreValidation";
+	
+	private static final String OVERRIDE_CSTE     = "overwrite";
 		
 
 	public static void main(String[] args) throws Exception{
@@ -53,8 +53,8 @@ public class SparkPocNbValidationsRestCallReseauComplexeMain {
 		
 		final String directory = args[0];
 		
-		SparkConf sparkConf = retrieveSparkConf();
-		SparkSession sparkSession = SparkSession.builder().config(sparkConf).getOrCreate();
+		// Retrieve the SparkSession
+		final SparkSession sparkSession = SparkSessionManager.getInstance().getSparkSession();
 
 		
 		// Groupage par nombre de validations et construction du Dataset correspondant. 
@@ -118,11 +118,11 @@ public class SparkPocNbValidationsRestCallReseauComplexeMain {
 		// Write to an output file.
 		if (directory.contains("hdfs://")){
 			csvJointure.rdd().saveAsTextFile(directory + "/outputfile.csv");
-			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
+			csvJointure.coalesce(1).write().mode(OVERRIDE_CSTE).options(getDataOutputParamCsv()).csv(directory + "/output.csv");
 
 		}else{
-			csvJointure.write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");
-			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/outputfinal.csv");
+			csvJointure.write().mode(OVERRIDE_CSTE).options(getDataOutputParamCsv()).csv(directory + "/output.csv");
+			csvJointure.coalesce(1).write().mode(OVERRIDE_CSTE).options(getDataOutputParamCsv()).csv(directory + "/outputfinal.csv");
 
 		}
 		
@@ -152,28 +152,6 @@ public class SparkPocNbValidationsRestCallReseauComplexeMain {
 
 	}
 	
-
-	
-	private static SparkConf retrieveSparkConf() {
-		
-		ConfigurationParameters configParameters = ConfigurationParameters.getInstance();
-		
-		
-		SparkConf sparkConf = new SparkConf().setAppName("Test Karim")
-		.setMaster(configParameters.getProperty(ConfigurationParameters.SPARK_MASTER_VALUE))
-        .set("spark.executor.memory", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_MEMORY))
-        .set("spark.driver.memory", configParameters.getProperty(ConfigurationParameters.SPARK_DRIVER_MEMORY))
-        .set("spark.executor.cores", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_CORES))
-        .set("spark.executor.instances", configParameters.getProperty(ConfigurationParameters.SPARK_EXECUTOR_INSTANCES))
-        .set("spark.sql.shuffle.partitions", configParameters.getProperty(ConfigurationParameters.SPARK_SQL_SHUFFLE_PARTITIONS))
-        .set("spark.serializer", KryoSerializer.class.getName())
-        .set("spark.kryo.registrator", BatchTestKarimRegistrator.class.getName())
-        .set("spark.kryo.registrationRequired", "true")
-        .set("spark.network.timeout", "10000001")
-        .set("spark.executor.heartbeatInterval", "10000000")
-        .set("spark.sql.autoBroadcastJoinThreshold", "52428800");
-		return sparkConf;
-	}
 	
 	 public static Map<String, String> getDataOutputParamCsv() {
 	        Map<String, String> options = new HashMap<>();
