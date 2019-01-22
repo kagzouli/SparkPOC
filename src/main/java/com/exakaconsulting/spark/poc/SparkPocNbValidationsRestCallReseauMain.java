@@ -20,6 +20,8 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.exakaconsulting.spark.poc.config.BatchTestKarimRegistrator;
+import com.exakaconsulting.spark.poc.config.ConfigurationParameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import scala.collection.JavaConversions;

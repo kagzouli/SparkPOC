@@ -1,4 +1,4 @@
-package com.exakaconsulting.spark.poc;
+package com.exakaconsulting.spark.poc.config;
 
 import org.apache.spark.serializer.KryoRegistrator;
 import org.apache.spark.sql.catalyst.InternalRow;

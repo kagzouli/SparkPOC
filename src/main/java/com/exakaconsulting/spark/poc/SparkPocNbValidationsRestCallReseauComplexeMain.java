@@ -1,39 +1,35 @@
 package com.exakaconsulting.spark.poc;
 
-import java.lang.reflect.Array;
+import static org.apache.spark.sql.types.DataTypes.IntegerType;
+import static org.apache.spark.sql.types.DataTypes.StringType;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.serializer.KryoSerializer;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.exakaconsulting.spark.poc.config.BatchTestKarimRegistrator;
+import com.exakaconsulting.spark.poc.config.ConfigurationParameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import scala.collection.JavaConversions;
-
-import static org.apache.spark.sql.types.DataTypes.IntegerType;
-import static org.apache.spark.sql.types.DataTypes.StringType;
-
-import org.apache.spark.sql.functions;
-import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 
 public class SparkPocNbValidationsRestCallReseauComplexeMain {
 	
@@ -61,34 +57,7 @@ public class SparkPocNbValidationsRestCallReseauComplexeMain {
 		SparkSession sparkSession = SparkSession.builder().config(sparkConf).getOrCreate();
 
 		
-		/* |-- trafficsStationBean: array (nullable = true)
-		 |    |-- element: struct (containsNull = true)
-		 |    |    |-- arrondissement: long (nullable = true)
-		 |    |    |-- id: long (nullable = true)
-		 |    |    |-- listCorrespondance: array (nullable = true)
-		 |    |    |    |-- element: string (containsNull = true)
-		 |    |    |-- reseau: string (nullable = true)
-		 |    |    |-- station: string (nullable = true)
-		 |    |    |-- traffic: long (nullable = true)
-		 |    |    |-- ville: string (nullable = true)
-		*/
-		StructType schemaBean = new StructType(new StructField[] {
-				new StructField("arrondissement",DataTypes.LongType, true,Metadata.empty()),
-				new StructField("id", DataTypes.LongType, true,Metadata.empty()),
-				new StructField("listCorrespondance",DataTypes.createArrayType(DataTypes.StringType), true,Metadata.empty()),
-				new StructField("reseau",DataTypes.StringType, true,Metadata.empty()),
-				new StructField("station",DataTypes.StringType, true,Metadata.empty()),
-				new StructField("traffic",DataTypes.LongType, true,Metadata.empty()),
-				new StructField("ville",DataTypes.StringType, true,Metadata.empty()),
-				
-		});
-		
-		
-		StructType schemaGlobal = new StructType(new StructField[] {
-				new StructField("element",DataTypes.createArrayType(schemaBean), true,
-						Metadata.empty()) });
-		
-		// Groupage par nombre de validations 
+		// Groupage par nombre de validations et construction du Dataset correspondant. 
 		final DataFrameReader schemaValidationBilStation = constructDataFrameValidationBilStation(sparkSession);
 		Dataset<Row> csvValidationBilStation = schemaValidationBilStation.format("csv").load(
 				directory + "/validations-sur-le-reseau-ferre-nombre-de-validations-par-jour-1er-semestre-2015.csv");
@@ -99,11 +68,11 @@ public class SparkPocNbValidationsRestCallReseauComplexeMain {
 		// collectAsList has to be avoided because it retrieves all the data to the driver.
 		csvValidationBilStation.collectAsList().forEach(row -> listStation.add(row.getAs(STATION_COLUMN)));
 		
-		
+		// Partition pour faire des appels packet de 10.
 		List<List<String>> partitionListStation = ListUtils.partition(listStation, 10);
 		
-		List<String> listRequestTableViewTemp = new ArrayList<>();
 		final ObjectMapper objectMapper = new ObjectMapper();
+		List<String> listRequestTableViewTemp = new ArrayList<>();
 		for (List<String> partListStation : partitionListStation){
 			CriteriaListNames criteriaListNames = new CriteriaListNames();
 			criteriaListNames.setRequest(partListStation);
@@ -125,37 +94,28 @@ public class SparkPocNbValidationsRestCallReseauComplexeMain {
 		options.put("input", "parametersinputpbl");
 		options.put("method", "POST");
 		
-		Dataset<Row> datasetResultCallRest = sparkSession.read().format("org.apache.dsext.spark.datasource.rest.RestDataSource").options(options).load();
-		datasetResultCallRest.printSchema();
+		final Dataset<Row> datasetResultCallRest = sparkSession.read().format("org.apache.dsext.spark.datasource.rest.RestDataSource").options(options).load();
 		
-		final Dataset<Row> datasetResultCallFiltered = datasetResultCallRest.select("trafficsStationBean");
-		Dataset<ListTrafficStationBean>  listTrafficStationBean = datasetResultCallFiltered.as(Encoders.bean(ListTrafficStationBean.class));
-		List<ListTrafficStationBean> datasetTraffic = listTrafficStationBean.collectAsList();
+		// Select the column trafficsStationBean and get a Dataset of ListTrafficStationBean
+		final Dataset<ListTrafficStationBean>  datasetListTrafficStationBean = datasetResultCallRest.select("trafficsStationBean").as(Encoders.bean(ListTrafficStationBean.class));
 		
-		List<TrafficStationBean> listFinal = new ArrayList<>();
-		
-		for (ListTrafficStationBean listTemp : datasetTraffic){
-			listFinal.addAll(listTemp.getTrafficsStationBean());
-		}
+		// Get all the trafficStationBean from the bean and the dataset
+		final Dataset<TrafficStationBean> datasetAllTraffic = datasetListTrafficStationBean.flatMap((FlatMapFunction<ListTrafficStationBean, TrafficStationBean>) listTrafficStationBean -> listTrafficStationBean.getTrafficsStationBean().iterator(), Encoders.bean(TrafficStationBean.class));
 		
 				
 		
-		LOGGER.info(String.format("The number of data is %s", datasetResultCallRest.count()));
-		LOGGER.info(String.format("The number final of data is %s", listFinal.size()));
+		if (LOGGER.isInfoEnabled()){
+			LOGGER.info(String.format("The number of data is %s", datasetAllTraffic.count()));
+		}
 
-		
-		final Dataset<Row> datasetAllTraffic = sparkSession.createDataFrame(listFinal, TrafficStationBean.class);
 
 		// Jointure avec les 2 datasets
 		List<String> listColumns = Arrays.asList(STATION_COLUMN);
-		Dataset<Row> csvJointure  = csvValidationBilStation.join(datasetAllTraffic, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN)
+		final Dataset<Row> csvJointure  = csvValidationBilStation.join(datasetAllTraffic, JavaConversions.asScalaBuffer(listColumns) ,LEFT_OUTER).orderBy(STATION_COLUMN)
 				.withColumn("listCorrespondance", functions.to_json(functions.struct(functions.col("listCorrespondance"))));
 		
 		
-	//	csvJointure.show(20000);
-		
-		// csvJointure.repartition(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(DIRECTORY + "/output.csv");
-		
+		// Write to an output file.
 		if (directory.contains("hdfs://")){
 			csvJointure.rdd().saveAsTextFile(directory + "/outputfile.csv");
 			csvJointure.coalesce(1).write().mode("overwrite").options(getDataOutputParamCsv()).csv(directory + "/output.csv");

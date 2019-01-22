@@ -1,4 +1,4 @@
-package com.exakaconsulting.spark.poc;
+package com.exakaconsulting.spark.poc.config;
 
 import java.io.File;
 import java.io.FileInputStream;

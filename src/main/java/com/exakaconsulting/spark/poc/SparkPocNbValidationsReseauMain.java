@@ -17,6 +17,9 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.exakaconsulting.spark.poc.config.BatchTestKarimRegistrator;
+import com.exakaconsulting.spark.poc.config.ConfigurationParameters;
+
 import scala.collection.JavaConversions;
 
 import static org.apache.spark.sql.types.DataTypes.IntegerType;
